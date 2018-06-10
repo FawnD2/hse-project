@@ -76,11 +76,15 @@ def main():
     print("Enter video file [Webcam]: ", end='')
     sys.stdout.flush()
     file = sys.stdin.readline()
+    isWebcam = False
     if file == "\n":
-        file = 0 #if webcam doesn't work, change to 1
+        file = 0 # if webcam doesn't work, change it to 1
+        isWebcam = True
     else:
         file = file[:-1]
     video_capture = cv2.VideoCapture(file)
+    frame_width = int(video_capture.get(cv2.CAP_PROP_FRAME_WIDTH))
+    frame_height = int(video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
     
     print("Enter sensitivity [0.65]: ", end='')
     sys.stdout.flush()
@@ -119,6 +123,15 @@ def main():
                 proc.add(im_dir, file)
                 print("Loaded:", file)
             sys.stdout.flush()
+            
+    print("Record video [n]/y? ", end='')
+    sys.stdout.flush()
+    rec = sys.stdin.readline()
+    if rec == "y\n":
+        rec = True
+        recorder = cv2.VideoWriter('output.avi', cv2.VideoWriter_fourcc('M','J','P','G'), 10 if isWebcam else 16, (frame_width, frame_height))
+    else:
+        rec = False
 
     print("Press <q> to exit.")
     sys.stdout.flush()
@@ -127,9 +140,13 @@ def main():
         ret, frame = video_capture.read()
         frame = proc.process_frame(frame, sens, scale)
         cv2.imshow('Video', frame)
+        if rec:
+            recorder.write(frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
+    if rec:
+        recorder.release()
     video_capture.release()
     cv2.destroyAllWindows()
 
