@@ -77,7 +77,7 @@ def main():
     sys.stdout.flush()
     file = sys.stdin.readline()
     if file == "\n":
-        file = 1 #if webcam doesn't work, change to 1
+        file = 0 #if webcam doesn't work, change to 1
     else:
         file = file[:-1]
     video_capture = cv2.VideoCapture(file)
