@@ -2,7 +2,7 @@ import face_recognition
 import cv2
 import os
 import sys
-
+ 
 class VideoProcesser():
     def __init__(self, framerate=2):
         self.known_face_encodings = []
@@ -12,24 +12,25 @@ class VideoProcesser():
         self.framerate = framerate
         self.face_locations = []
         self.face_names = []
-        self.face_encoding_distance = 0
-        
+        self.face_encoding_distances = []
+ 
     def add(self, dir_path, im_name):
         im = face_recognition.load_image_file(dir_path+'/'+im_name)
         self.known_face_encodings.append(face_recognition.face_encodings(im)[0])
         self.known_face_names.append(im_name.split('.')[0])
-    
+ 
     def process_frame(self, frame, sens=0.65, scale=2):
         small_frame = cv2.resize(frame, (0, 0), fx=1/scale, fy=1/scale)
-
+ 
         rgb_small_frame = small_frame[:, :, ::-1]
-        
+ 
         if self.frame_count % self.framerate == 0:
             self.face_locations = face_recognition.face_locations(rgb_small_frame)
             face_encodings = face_recognition.face_encodings(rgb_small_frame, self.face_locations)
-
+ 
             self.face_names = []
-
+            self.face_encoding_distances = []
+ 
             for face_encoding in face_encodings:
                 if len(self.known_face_encodings) == 0:
                     self.known_face_encodings.append(face_encoding)
@@ -39,7 +40,7 @@ class VideoProcesser():
                     continue
                 else:
                     matches = face_recognition.compare_faces(self.known_face_encodings, face_encoding, sens)
-
+ 
                 if True in matches:
                     first_match_index = matches.index(True)
                     name = self.known_face_names[first_match_index]
@@ -48,30 +49,29 @@ class VideoProcesser():
                     self.known_face_names.append("Id:"+str(self.face_max_id))
                     name = str(self.face_max_id)
                     self.face_max_id += 1
-                    first_match_index = self.face_max_id - 1
-
+                    first_match_index = len(self.known_face_encodings) - 1
+ 
                 self.face_names.append(name)
-
                 face_distance = face_recognition.face_distance([self.known_face_encodings[first_match_index]], face_encoding)
-                self.face_encoding_distance = (1 - face_distance[0]) * 100
-                
+                self.face_encoding_distances.append((1 - face_distance[0]) * 100)
+ 
         self.frame_count += 1
-        for (top, right, bottom, left), name in zip(self.face_locations, self.face_names):
+        for (top, right, bottom, left), name, face_encoding_distance in zip(self.face_locations, self.face_names, self.face_encoding_distances):
             top *= scale
             right *= scale
             bottom *= scale
             left *= scale
-
+ 
             cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
-
+ 
             cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
-            
+ 
             font = cv2.FONT_HERSHEY_DUPLEX
-            cv2.putText(frame, name + " " + str(self.face_encoding_distance)[0:2] + "%", (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
-            
+            cv2.putText(frame, name + " " + str(face_encoding_distance)[0:2] + "%", (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
+ 
         return frame
-    
-    
+ 
+ 
 def main():
     print("Enter video file [Webcam]: ", end='')
     sys.stdout.flush()
@@ -85,7 +85,7 @@ def main():
     video_capture = cv2.VideoCapture(file)
     frame_width = int(video_capture.get(cv2.CAP_PROP_FRAME_WIDTH))
     frame_height = int(video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    
+ 
     print("Enter sensitivity [0.65]: ", end='')
     sys.stdout.flush()
     sens = sys.stdin.readline()
@@ -93,7 +93,7 @@ def main():
         sens=0.65
     else:
         sens = float(sens)
-    
+ 
     print("Enter scale [2]: ", end='')
     sys.stdout.flush()
     scale = sys.stdin.readline()
@@ -101,7 +101,7 @@ def main():
         scale = 2
     else:
         scale = int(scale)
-        
+ 
     print("Enter framerate [2]: ", end='')
     sys.stdout.flush()
     framerate = sys.stdin.readline()
@@ -110,12 +110,12 @@ def main():
     else:
         framerate = int(framerate)
     proc = VideoProcesser(framerate)
-    
+ 
     print("Preload images from directory [Don't]: ", end='')
     sys.stdout.flush()
     im_dir = sys.stdin.readline()
     if im_dir != "\n":
-        formats = ["jpg", "png"]
+        formats = ["jpg", "jpeg", "png"]
         im_dir = im_dir[:-1]
         files = os.listdir(im_dir)
         for file in files:
@@ -123,32 +123,42 @@ def main():
                 proc.add(im_dir, file)
                 print("Loaded:", file)
             sys.stdout.flush()
-            
+ 
     print("Record video [n]/y? ", end='')
     sys.stdout.flush()
     rec = sys.stdin.readline()
     if rec == "y\n":
+        print("Enter fps [24]: ", end='')
+        sys.stdout.flush()
+        fps = sys.stdin.readline()
+        if fps == "\n":
+            fps = 24
+        else:
+            fps = int(fps)
         rec = True
-        recorder = cv2.VideoWriter('output.avi', cv2.VideoWriter_fourcc('M','J','P','G'), 10 if isWebcam else 16, (frame_width, frame_height))
+        recorder = cv2.VideoWriter('output.avi', cv2.VideoWriter_fourcc('M','J','P','G'), fps, (frame_width, frame_height))
     else:
         rec = False
-
+ 
     print("Press <q> to exit.")
     sys.stdout.flush()
-    
-    while True:
+ 
+    while video_capture.isOpened():
         ret, frame = video_capture.read()
-        frame = proc.process_frame(frame, sens, scale)
-        cv2.imshow('Video', frame)
-        if rec:
-            recorder.write(frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        if ret:
+            frame = proc.process_frame(frame, sens, scale)
+            cv2.imshow('Video', frame)
+            if rec:
+                recorder.write(frame)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+        else:
             break
-
+ 
+    video_capture.release()
     if rec:
         recorder.release()
-    video_capture.release()
     cv2.destroyAllWindows()
-
+ 
 if __name__ == "__main__":
     main()
