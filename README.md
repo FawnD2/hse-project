@@ -43,4 +43,4 @@ pip3 install face_recognition
 
 #### Примеры
 
-Доступны ([ссылке](https://drive.google.com/open?id=14XStE6IFt-cyFHBwONPCTFGJyW3I8cjT))
+Доступны по ([ссылке](https://drive.google.com/open?id=14XStE6IFt-cyFHBwONPCTFGJyW3I8cjT))
