@@ -1,12 +1,12 @@
 # hse-project
 
-##Учебный проект по распознаванию лиц на видео 
+## Учебный проект по распознаванию лиц на видео 
 
-###Требования
+### Требования
 
   * Python 3.3+ или Python 2.7
   * macOS или Linux (Windows официально не поддерживается используемыми библиотеками, но может работать) 
-  * dlib с модулем для Python (  * [Как установить dlib на MacOS или Ubuntu](https://gist.github.com/ageitgey/629d75c1baac34dfa5ca2a1928a7aeaf))
+  * dlib с модулем для Python ([Как установить dlib на MacOS или Ubuntu](https://gist.github.com/ageitgey/629d75c1baac34dfa5ca2a1928a7aeaf))
   * opencv
   ```bash
 pip3 install opencv-python
