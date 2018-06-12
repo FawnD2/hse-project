@@ -9,10 +9,16 @@
   ```bash
 pip3 install opencv-python
 ```
-  * модуль face_recognition через
+  * модуль face_recognition
 
 ```bash
 pip3 install face_recognition
+```
+
+  * модуль moviepy.editor
+
+```bash
+pip3 install moviepy.editor
 ```
  
 ### Использование

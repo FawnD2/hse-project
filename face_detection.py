@@ -2,6 +2,8 @@ import face_recognition
 import cv2
 import os
 import sys
+from moviepy.editor import *
+
  
 class VideoProcesser():
     def __init__(self, framerate=2):
@@ -70,16 +72,33 @@ class VideoProcesser():
             cv2.putText(frame, name + " " + str(face_encoding_distance)[0:2] + "%", (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
  
         return frame
+
+
+def stick_audio(input_file_name, output_file_name):
+    input_video = VideoFileClip(input_file_name)
+    output_video = VideoFileClip(output_file_name)
+    audio = AudioFileClip(input_file_name)
+
+    os.rename(output_file_name, "output_without_audio.avi")
+
+    expected_duration = output_video.duration * output_video.fps / input_video.fps
+    if expected_duration > input_video.duration:
+        expected_duration = input_video.duration
+
+    audio = vfx.speedx(clip=audio.subclip(0, expected_duration), final_duration=output_video.duration)
+
+    output_video = output_video.set_audio(audio)
+    output_video.write_videofile(output_file_name, codec='mpeg4', bitrate="14400k")
  
  
 def main():
     print("Enter video file [Webcam]: ", end='')
     sys.stdout.flush()
     file = sys.stdin.readline()
-    isWebcam = False
+    is_webcam = False
     if file == "\n":
         file = 0 # if webcam doesn't work, change it to 1
-        isWebcam = True
+        is_webcam = True
     else:
         file = file[:-1]
     video_capture = cv2.VideoCapture(file)
@@ -136,7 +155,7 @@ def main():
         else:
             fps = int(fps)
         rec = True
-        recorder = cv2.VideoWriter('output.avi', cv2.VideoWriter_fourcc('M','J','P','G'), fps, (frame_width, frame_height))
+        recorder = cv2.VideoWriter('output.avi', cv2.VideoWriter_fourcc('X','V','I','D'), fps, (frame_width, frame_height))
     else:
         rec = False
  
@@ -158,7 +177,12 @@ def main():
     video_capture.release()
     if rec:
         recorder.release()
+
     cv2.destroyAllWindows()
+
+    if rec and not is_webcam:
+        stick_audio(file, "output.avi")
+
  
 if __name__ == "__main__":
     main()
