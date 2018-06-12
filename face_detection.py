@@ -94,14 +94,14 @@ def stick_audio(input_file_name, output_file_name):
 def main():
     print("Enter video file [Webcam]: ", end='')
     sys.stdout.flush()
-    file = sys.stdin.readline()
+    video_file = sys.stdin.readline()
     is_webcam = False
-    if file == "\n":
-        file = 0 # if webcam doesn't work, change it to 1
+    if video_file == "\n":
+        video_file = 0 # if webcam doesn't work, change it to 1
         is_webcam = True
     else:
-        file = file[:-1]
-    video_capture = cv2.VideoCapture(file)
+        video_file = video_file[:-1]
+    video_capture = cv2.VideoCapture(video_file)
     frame_width = int(video_capture.get(cv2.CAP_PROP_FRAME_WIDTH))
     frame_height = int(video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
  
@@ -181,7 +181,7 @@ def main():
     cv2.destroyAllWindows()
 
     if rec and not is_webcam:
-        stick_audio(file, "output.avi")
+        stick_audio(video_file, "output.avi")
 
  
 if __name__ == "__main__":
