@@ -49,4 +49,4 @@ pip3 install moviepy.editor
 
 #### Примеры
 
-Доступны по ([ссылке](https://drive.google.com/open?id=14XStE6IFt-cyFHBwONPCTFGJyW3I8cjT))
+Доступны по ([ссылке](https://drive.google.com/open?id=1BLgruzcbsqPQczuoY5pqa-ppgZooku4C))
